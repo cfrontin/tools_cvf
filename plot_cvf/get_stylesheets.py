@@ -3,7 +3,7 @@ import os.path
 
 file_dir= os.path.split(__file__)[0]
 stylesheet_seaborn_base_name= 'stylesheet_seaborn.mplstyle'
-stylesheet_cvf_base_name= 'stylesheet_seaborn.mplstyle'
+stylesheet_cvf_base_name= 'stylesheet_cvf.mplstyle'
 
 def get_stylesheets(style= None, dark= False,
                     seaborn_base= True, cvf_base= True,
