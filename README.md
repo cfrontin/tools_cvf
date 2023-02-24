@@ -24,7 +24,6 @@ plt.style.use(plot_cvf.get_stylesheets())
 will result in:
 
 ![dressed up pyplot sinusoid](assets/plot_stylesheet.png)
-![dressed up pyplot sinusoid (dark)](assets/plot_stylesheet_dark.png)
 
 In a pinch, `plot_cvf` is not going to be available, but having this on github
 is useful, because pyplot can set a stylesheet based on a URL. Thus, even:
@@ -40,5 +39,5 @@ plt.style.use(['dark_background', '',
 ... do standard plotting with pyplot ...
 
 ```
-will result in pretty plots.
-
+will result in pretty plots:
+![dressed up pyplot sinusoid (dark)](assets/plot_stylesheet_dark.png)
