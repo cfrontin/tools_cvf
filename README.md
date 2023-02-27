@@ -40,4 +40,5 @@ plt.style.use(['dark_background', '',
 
 ```
 will result in pretty plots:
+
 ![dressed up pyplot sinusoid (dark)](assets/plot_stylesheet_dark.png)
