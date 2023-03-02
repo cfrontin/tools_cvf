@@ -22,18 +22,29 @@ def do(fname_save= None):
 # do()
 
 url_stylesheet_cvf= "https://github.nrel.gov/raw/cfrontin/plot_cvf/main/plot_cvf/stylesheet_cvf.mplstyle"
+url_stylesheet_cvf_notex= "https://github.nrel.gov/raw/cfrontin/plot_cvf/main/plot_cvf/stylesheet_cvf_notex.mplstyle"
 url_stylesheet_seaborn= "https://github.nrel.gov/raw/cfrontin/plot_cvf/main/plot_cvf/stylesheet_seaborn.mplstyle"
 
-if True:
-  # with plt.style.context(plot_cvf.get_stylesheets()):
-  # with plt.style.context(['/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_seaborn.mplstyle',
-  #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_cvf.mplstyle']):
-  with plt.style.context([url_stylesheet_seaborn, url_stylesheet_cvf]):
-    do(fname_save= "assets/plot_stylesheet.png")
-if True:
-  # with plt.style.context(plot_cvf.get_stylesheets(dark= True)):
-  # with plt.style.context(['dark_background',
-  #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_seaborn.mplstyle',
-  #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_cvf.mplstyle',]):
-  with plt.style.context(['dark_background', url_stylesheet_seaborn, url_stylesheet_cvf,]):
-    do(fname_save= "assets/plot_stylesheet_dark.png")
+use_tex= False
+if use_tex:
+  if True:
+    # with plt.style.context(plot_cvf.get_stylesheets()):
+    # with plt.style.context(['/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_seaborn.mplstyle',
+    #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_cvf.mplstyle']):
+    with plt.style.context([url_stylesheet_seaborn, url_stylesheet_cvf]):
+      do(fname_save= "assets/plot_stylesheet.png")
+  if True:
+    # with plt.style.context(plot_cvf.get_stylesheets(dark= True)):
+    # with plt.style.context(['dark_background',
+    #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_seaborn.mplstyle',
+    #                         '/Users/cfrontin/codes/plot_cvf/plot_cvf/stylesheet_cvf.mplstyle',]):
+    with plt.style.context(['dark_background', url_stylesheet_seaborn, url_stylesheet_cvf,]):
+      do(fname_save= "assets/plot_stylesheet_dark.png")
+else:
+  if True:
+    with plt.style.context(plot_cvf.get_stylesheets(use_latex= False)):
+    # with plt.style.context([url_stylesheet_seaborn, url_stylesheet_cvf_notex]):
+      do(fname_save= "assets/plot_stylesheet.png")
+  if True:
+    with plt.style.context(plot_cvf.get_stylesheets(dark= True, use_latex= False)):
+      do(fname_save= "assets/plot_stylesheet_dark.png")
