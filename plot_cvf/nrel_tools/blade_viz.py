@@ -5,6 +5,7 @@ import os.path
 # IO libraries
 import copy
 import yaml
+from collections import OrderedDict
 
 # plotting
 import numpy as np
@@ -277,16 +278,74 @@ def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
     return x_blended, y_blended
 
 
-def do_comparison_plots():
-    pass
+def do_airfoil_viz(data: dict):
+    """
+    vizualize in 3D a wind turbine blade or set of blades specified using a yaml
+    file
+
+    inputs:
+        - data: a dictionary resulting from a yaml file input
+    """
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")  # get the airfoils
+
+    # for airfoil_location, airfoil_label in zip(*airfoil_position_data.values()):
+    #   print("%6f" % airfoil_location, airfoil_label)
+    for airfoil_location in np.linspace(0.0, 1.0, 31):
+        # raw airfoil coordinate
+        x_airfoil, y_airfoil = loft_foils(data, airfoil_location)
+
+        # get splined data
+        (
+            chord_here,
+            twist_here,
+            pitch_axis_here,
+            (x_refax, y_refax, z_refax),
+        ) = get_splined_section(data, airfoil_location)
+
+        # transform, translating pitch axis first
+        x_airfoil -= pitch_axis_here
+        # then multiplying by chord everywhere
+        x_airfoil *= chord_here
+        y_airfoil *= chord_here
+        # now rotate by twist
+        x_airfoil_old = copy.deepcopy(x_airfoil)
+        y_airfoil_old = copy.deepcopy(y_airfoil)
+        x_airfoil = x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(
+            twist_here
+        )
+        y_airfoil = y_airfoil_old * np.cos(twist_here) - x_airfoil_old * np.sin(
+            twist_here
+        )
+        # now move to the reference axis
+        x_airfoil += x_refax
+        y_airfoil += y_refax
+
+        plt.plot(x_airfoil, y_airfoil, np.ones_like(x_airfoil) * z_refax)
+
+    ax.axis("square")
+    ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    ax.zaxis.set_visible(False)
+    ax.grid(False)
+    plt.show()
 
 
-def main():
-    # load the stylesheet for good plots
-    plt.style.use(plot_cvf.get_stylesheets(dark=True))
+def do_design_comparison_plots(dataset: list[dict]):
+    """
+    compare a wind turbine blade or set of blades in terms of the non-dim.
+    spanwise variation of their design variables
 
-    # get the filename after checking input for obvious issues
-    filenames = check_input(sys.argv)
+    inputs:
+        - dataset: a dict or list of dicts resulting from a yaml file input
+    """
+
+    # handle if a dictionary rather than list of dicts is passed
+    if type(dataset) == dict:
+        dataset = [
+            dataset,
+        ]
 
     chords_to_plot = []
     twists_to_plot = []
@@ -294,71 +353,17 @@ def main():
     refax_y_to_plot = []
     refax_z_to_plot = []
 
-    airfoil_dict = {}
-
-    for filename in filenames:
-        # try to safe read
-        with open(filename, "r") as infile:
-            data = yaml.safe_load(infile)
-
-        display_name = os.path.split(os.path.splitext(filename)[0])[-1]
-
+    for display_name, data in dataset.items():
         # get the blade profile data
         (
-            airfoil_position_data,
+            _,
             chord_data,
             twist_data,
-            pitch_axis_data,
+            _,
             reference_axis_data,
         ) = extract_blade_vectors(data)
 
-        fig = plt.figure()
-        ax = fig.add_subplot(projection="3d")  # get the airfoils
-
-        # for airfoil_location, airfoil_label in zip(*airfoil_position_data.values()):
-        #   print("%6f" % airfoil_location, airfoil_label)
-        for airfoil_location in np.linspace(0.0, 1.0, 31):
-            # raw airfoil coordinate
-            x_airfoil, y_airfoil = loft_foils(data, airfoil_location)
-            # # raw airfoil coordinate
-            # x_airfoil= copy.deepcopy(airfoil_dict[airfoil_label]['coordinates']['x'])
-            # y_airfoil= copy.deepcopy(airfoil_dict[airfoil_label]['coordinates']['y'])
-
-            # get splined data
-            (
-                chord_here,
-                twist_here,
-                pitch_axis_here,
-                (x_refax, y_refax, z_refax),
-            ) = get_splined_section(data, airfoil_location)
-
-            # transform, translating pitch axis first
-            x_airfoil -= pitch_axis_here
-            # then multiplying by chord everywhere
-            x_airfoil *= chord_here
-            y_airfoil *= chord_here
-            # now rotate by twist
-            x_airfoil_old = copy.deepcopy(x_airfoil)
-            y_airfoil_old = copy.deepcopy(y_airfoil)
-            x_airfoil = x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(
-                twist_here
-            )
-            y_airfoil = y_airfoil_old * np.cos(twist_here) - x_airfoil_old * np.sin(
-                twist_here
-            )
-            # now move to the reference axis
-            x_airfoil += x_refax
-            y_airfoil += y_refax
-
-            plt.plot(x_airfoil, y_airfoil, np.ones_like(x_airfoil) * z_refax)
-
-        ax.axis("square")
-        ax.xaxis.set_visible(False)
-        ax.yaxis.set_visible(False)
-        ax.zaxis.set_visible(False)
-        ax.grid(False)
-        plt.show()
-
+        # append things to plot
         chords_to_plot.append(
             {"x": chord_data["grid"], "y": chord_data["values"], "label": display_name}
         )
@@ -387,18 +392,7 @@ def main():
             }
         )
 
-    # # plot each airfoil at reference scale
-    # fig, ax= plt.subplots()
-    # for airfoil_label, airfoil_data in airfoil_dict.items():
-    #   print(airfoil_label)
-    #   print(airfoil_data)
-    #   ax.plot(airfoil_data['coordinates']['x'], airfoil_data['coordinates']['y'], '.-',
-    #           label= airfoil_label)
-    # ax.axis('square')
-    # fig.legend()
-    # plt.show()
-
-    # make a plot
+    # make the plot
     fig, ax = create_plot_splined(
         chords_to_plot, xlabel="non-dimensional span", ylabel="chord"
     )
@@ -411,9 +405,39 @@ def main():
     fig, ax = create_plot_splined(
         refax_y_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $y$"
     )
-    # fig, ax= create_plot_splined(refax_z_to_plot,
-    #                              xlabel= "non-dimenstional span", ylabel= "ref. axis $z$")
+    fig, ax = create_plot_splined(
+        refax_z_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $z$"
+    )
     plt.show()
+
+
+def main():
+    # load the stylesheet for good plots
+    plt.style.use(plot_cvf.get_stylesheets(dark=True))
+
+    # get the filename after checking input for obvious issues
+    filenames = check_input(sys.argv)
+
+    # create a set of plots to make, preserve ordering
+    dataset = OrderedDict()
+
+    # loop over filenames
+    for filename in filenames:
+        # try to safe read
+        with open(filename, "r") as infile:
+            data = yaml.safe_load(infile)
+
+        # get the name based on the file
+        display_name = os.path.split(os.path.splitext(filename)[0])[-1]
+
+        # add this data to the dataset
+        dataset[display_name] = data
+
+        # while we're here do the airfoil viz
+        do_airfoil_viz(data)
+
+    # and also do comparison plots
+    do_design_comparison_plots(dataset)
 
 
 if __name__ == "__main__":
