@@ -317,13 +317,17 @@ def do_airfoil_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
         # rotate to get the airfoil to the right coords for the blade frame of ref.
         x_airfoil_old = copy.deepcopy(x_airfoil)
         y_airfoil_old = copy.deepcopy(y_airfoil)
-        x_airfoil= y_airfoil_old
-        y_airfoil= x_airfoil_old
+        x_airfoil = y_airfoil_old
+        y_airfoil = x_airfoil_old
         # now rotate by twist
         x_airfoil_old = copy.deepcopy(x_airfoil)
         y_airfoil_old = copy.deepcopy(y_airfoil)
-        x_airfoil = + x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(twist_here)
-        y_airfoil = - x_airfoil_old * np.sin(twist_here) + y_airfoil_old * np.cos(twist_here)
+        x_airfoil = +x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(
+            twist_here
+        )
+        y_airfoil = -x_airfoil_old * np.sin(twist_here) + y_airfoil_old * np.cos(
+            twist_here
+        )
         # now move to the reference axis
         x_airfoil += x_refax
         y_airfoil += y_refax
