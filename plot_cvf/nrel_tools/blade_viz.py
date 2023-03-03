@@ -110,9 +110,22 @@ def extract_airfoil(yaml_data: dict, airfoil_label: str) -> dict:
     return airfoil_dict
 
 
-def get_splined_section(yaml_data, zq):
+def get_splined_section(yaml_data: dict, zq: float) -> tuple:
     """
-    get the splined version of 
+    get the splined version of the design variables at a given non-dim. span
+
+    inputs:
+        - yaml_data: dictionary result from yaml import
+        - zq: nondimensional span at which to evaluate interpolation
+
+    returns:
+        - cq: chord at query point
+        - twq: twist at query points
+        - paq: pitch axis location at query point
+        - _:
+            - xq_refax: reference axis value at query point (in plane/cone of rotation, +: w/ airfoil motion)
+            - yq_refax: reference axis value at query point (out of plane/cone of roration, +: rearward)
+            - zq_refax: reference axis value at query point (span direction, +: outboard)
     """
     # get the data
     (
@@ -149,10 +162,23 @@ def get_splined_section(yaml_data, zq):
     return cq, twq, paq, (xq_refax, yq_refax, zq_refax)
 
 
-def create_plot_splined(data_dict_list, xlabel=None, ylabel=None):
+def create_plot_splined(
+    data_dict_list: list[dict], xlabel: str = None, ylabel: str = None
+):
     """
-    create a plot of a quantity that should be interpreted via a PCHIP lofting
-    spline
+    create a plot of a quantity interpreted via a PCHIP lofting spline
+
+    inputs:
+        - data_dict_list: dict or list of dicts with keys:
+            - x: x data to interpolate
+            - y: y data to interpolate
+            - label: label for data
+        - xlabel: string for x label
+        - ylabel: string for y label
+
+    returns:
+        - fig: pyplot figure for plot
+        - ax: pyplot axis for plot
     """
 
     if type(data_dict_list) == dict:
@@ -176,7 +202,27 @@ def create_plot_splined(data_dict_list, xlabel=None, ylabel=None):
     return fig, ax
 
 
-def loft_foils(yaml_data, zq, Ninterp=101):
+def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
+    """
+    loft airfoils along the span between exactly specified airfoils
+
+    possibly distinct airfoils are specified at a series of discrete non-dim.
+    span locations, in order to loft the airfoil, use a two step process:
+        1. put airfoils on a common grid (assumed points are arc-equispaced) by
+            PCHIPS interpolation
+        2. interpolate between distinct airfoils by interpolating between
+            matched gridpoints across separate airfoils by PCHIPS interpolation
+
+    inputs:
+        - yaml_data: dictionary result from yaml import
+        - zq: nondimensional span at which to evaluate interpolation
+        - Ninterp: number of points at which to interpolate the airfoil data
+
+    returns:
+        - x_blended: lofted airfoil x data
+        - y_blended: lofted airfoil y data
+    """
+
     # get the spanwise data
     (
         airfoil_section_data,
@@ -229,6 +275,10 @@ def loft_foils(yaml_data, zq, Ninterp=101):
         y_blended[i] = interpol.PchipInterpolator(z_stringer, y_stringer)(zq)
 
     return x_blended, y_blended
+
+
+def do_comparison_plots():
+    pass
 
 
 def main():
