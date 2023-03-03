@@ -18,15 +18,17 @@ import pprint as pp
 
 def check_input(input: list) -> list[str]:
     """
-    check command line inputs to make sure they point to:
+    check command line input files
+
+    check command line input files to make sure they point to:
         - at least one real file
         - only yamls
 
     inputs:
-        - input: list of CLI inputs
+        - input: list of CLI input files
 
     returns:
-        - list of filenames to work
+        - list of filenames to work on
     """
 
     # input checking
