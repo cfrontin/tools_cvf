@@ -144,14 +144,17 @@ def get_splined_section(yaml_data: dict, zq: float) -> tuple:
     cp_chord = chord_data["values"]
     cq = interpol.PchipInterpolator(zp_chord, cp_chord)(zq)
 
+    # twist
     zp_twist = twist_data["grid"]
     twp_twist = twist_data["values"]
     twq = interpol.PchipInterpolator(zp_twist, twp_twist)(zq)
 
+    # pitch axis
     zp_pitchax = pitch_axis_data["grid"]
     pap_pitchax = pitch_axis_data["values"]
     paq = interpol.PchipInterpolator(zp_pitchax, pap_pitchax)(zq)
 
+    # reference axes
     ndsxp_refax = reference_axis_data["x"]["grid"]
     xp_refax = reference_axis_data["x"]["values"]
     xq_refax = interpol.PchipInterpolator(ndsxp_refax, xp_refax)(zq)
@@ -169,7 +172,7 @@ def create_plot_splined(
     data_dict_list: list[dict], xlabel: str = None, ylabel: str = None
 ):
     """
-    create a plot of a quantity interpreted via a PCHIP lofting spline
+    create a plot of a quantity interpreted via a PCHIP spline
 
     inputs:
         - data_dict_list: dict or list of dicts with keys:
@@ -280,7 +283,7 @@ def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
     return x_blended, y_blended
 
 
-def do_airfoil_viz(data: dict):
+def do_airfoil_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
     """
     vizualize in 3D a wind turbine blade or set of blades specified using a yaml
     file
@@ -294,9 +297,9 @@ def do_airfoil_viz(data: dict):
 
     # for airfoil_location, airfoil_label in zip(*airfoil_position_data.values()):
     #   print("%6f" % airfoil_location, airfoil_label)
-    for airfoil_location in np.linspace(0.0, 1.0, 31):
+    for airfoil_location in reversed(np.linspace(0.0, 1.0, Nsection)):
         # raw airfoil coordinate
-        x_airfoil, y_airfoil = loft_foils(data, airfoil_location)
+        x_airfoil, y_airfoil = loft_foils(data, airfoil_location, Ninterp=Ninterp)
 
         # get splined data
         (
@@ -311,20 +314,21 @@ def do_airfoil_viz(data: dict):
         # then multiplying by chord everywhere
         x_airfoil *= chord_here
         y_airfoil *= chord_here
+        # rotate to get the airfoil to the right coords for the blade frame of ref.
+        x_airfoil_old = copy.deepcopy(x_airfoil)
+        y_airfoil_old = copy.deepcopy(y_airfoil)
+        x_airfoil= y_airfoil_old
+        y_airfoil= x_airfoil_old
         # now rotate by twist
         x_airfoil_old = copy.deepcopy(x_airfoil)
         y_airfoil_old = copy.deepcopy(y_airfoil)
-        x_airfoil = x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(
-            twist_here
-        )
-        y_airfoil = y_airfoil_old * np.cos(twist_here) - x_airfoil_old * np.sin(
-            twist_here
-        )
+        x_airfoil = + x_airfoil_old * np.cos(twist_here) + y_airfoil_old * np.sin(twist_here)
+        y_airfoil = - x_airfoil_old * np.sin(twist_here) + y_airfoil_old * np.cos(twist_here)
         # now move to the reference axis
         x_airfoil += x_refax
         y_airfoil += y_refax
 
-        plt.plot(x_airfoil, y_airfoil, np.ones_like(x_airfoil) * z_refax)
+        plt.plot(x_airfoil, y_airfoil, z_refax * np.ones_like(x_airfoil))
 
     ax.axis("square")
     ax.xaxis.set_visible(False)
@@ -436,7 +440,7 @@ def main():
         dataset[display_name] = data
 
         # while we're here do the airfoil viz
-        do_airfoil_viz(data)
+        do_airfoil_viz(data, 101, 51)
 
     # and also do comparison plots
     do_design_comparison_plots(dataset)
