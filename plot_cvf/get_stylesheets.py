@@ -4,6 +4,7 @@ import os.path
 file_dir= os.path.split(__file__)[0]
 stylesheet_seaborn_base_name= 'stylesheet_seaborn.mplstyle'
 stylesheet_cvf_base_name= 'stylesheet_cvf.mplstyle'
+stylesheet_cvf_notex_name= 'stylesheet_cvf_notex.mplstyle'
 
 def get_stylesheets(style= None, dark= False,
                     seaborn_base= True, cvf_base= True,
@@ -21,6 +22,6 @@ def get_stylesheets(style= None, dark= False,
   if cvf_base and use_latex:
     out_list.append(os.path.join(file_dir, stylesheet_cvf_base_name))
   elif cvf_base:
-    raise NotImplementedError("need to implement a latex-free custom stylesheet still.")
+    out_list.append(os.path.join(file_dir, stylesheet_cvf_notex_name))
   
   return out_list # kick out the result
