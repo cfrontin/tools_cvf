@@ -355,7 +355,7 @@ def do_blade_viz(
     if save_fig:
         filename_plot = "blade_%s.png" % display_name if display_name else "blade.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -429,7 +429,7 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     if save_fig:
         filename_plot = "designs_chord.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -442,7 +442,7 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     if save_fig:
         filename_plot = "designs_twist.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -455,7 +455,7 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     if save_fig:
         filename_plot = "designs_refax_x.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -468,7 +468,7 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     if save_fig:
         filename_plot = "designs_refax_y.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -481,7 +481,7 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     if save_fig:
         filename_plot = "designs_refax_z.png"
         plt.savefig(filename_plot, bbox_inches="tight")
-    if show_fig is None:
+    if show_fig:
         plt.show()
     else:
         plt.close()
@@ -499,13 +499,15 @@ def main():
     parser.add_argument("-b", "--blade", action="store_true", default=False)
     parser.add_argument("-n", "--noshow", action="store_true", default=False)
     parser.add_argument("-s", "--save", action="store_true", default=False)
+    parser.add_argument("-l", "--latex", action="store_false", default= True)
 
     args, arg_filenames = parser.parse_known_args()
 
     ### do functionality
 
     # load the stylesheet for good plots
-    plt.style.use(plot_cvf.get_stylesheets(dark=True))
+    plt.style.use(plot_cvf.get_stylesheets(dark=True,
+                                           use_latex= args.latex))
 
     # get the filename after checking input for obvious issues
     filenames = check_input(arg_filenames)

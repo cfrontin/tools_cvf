@@ -1,7 +1,6 @@
 
 # cory overrides
 
-font.family: ['serif']
 axes.spines.bottom: False
 axes.spines.left: False
 axes.spines.right: False

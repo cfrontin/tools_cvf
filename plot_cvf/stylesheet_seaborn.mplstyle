@@ -14,7 +14,7 @@ grid.linestyle: -
 
 # text.color: 0.15
 # font.family: ['sans-serif']
-font.sans-serif: ["Arial", "DejaVu Sans", "Liberation Sans", "Bitstream Vera Sans", "sans-serif"],
+# font.sans-serif: ["Arial", "DejaVu Sans", "Liberation Sans", "Bitstream Vera Sans", "sans-serif"],
 
 lines.solid_capstyle: round
 # patch.edgecolor: w
