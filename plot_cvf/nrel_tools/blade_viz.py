@@ -3,6 +3,7 @@ import sys
 import os.path
 
 # IO libraries
+import argparse
 import copy
 import yaml
 from collections import OrderedDict
@@ -31,18 +32,21 @@ def check_input(input: list) -> list[str]:
         - list of filenames to work on
     """
 
-    # input checking
-    assert len(input) > 1, "you need to specify at least one file"
+    # input checking: either string or list of strings
+    if type(input) == str:
+        input = [
+            input,
+        ]  # coerce to list when string is input
+    assert type(input) == list, "entry must be a list of strings"
+    assert len(input) > 0, "you need to specify at least one file"
+    for x in input:
+        assert type(x) == str, "entry must be a list of strings"
 
+    # make sure inputs are legitimate yaml filenames
     filenames = []
-    if len(input) > 2:
-        for input_slice in range(len(input) - 1):
-            filename = check_input([input[0], input[input_slice + 1]])
-            filenames += filename
-    else:
-        filename = input[1]
+    for filename in input:
         assert os.path.isfile(filename), "this code only works on yaml files"
-        fname_base, extension = os.path.splitext(filename)
+        _, extension = os.path.splitext(filename)
         assert extension in [".yaml", ".yml"], "this code only works on yaml files"
         filenames.append(filename)
 
@@ -283,7 +287,7 @@ def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
     return x_blended, y_blended
 
 
-def do_airfoil_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
+def do_blade_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
     """
     vizualize in 3D a wind turbine blade or set of blades specified using a yaml
     file
@@ -422,11 +426,24 @@ def do_design_comparison_plots(dataset: list[dict]):
 
 
 def main():
+    ### parse CLI arguments
+    parser = argparse.ArgumentParser(
+        prog="blade_viz",
+        description="cfrontin's automated wind turbine blade vizualization routines",
+        epilog="have a nice day.\a\n",
+    )
+    parser.add_argument("-d", "--design", action="store_true", default=False)
+    parser.add_argument("-b", "--blade", action="store_true", default=False)
+
+    args, arg_filenames = parser.parse_known_args()
+
+    ### do functionality
+
     # load the stylesheet for good plots
     plt.style.use(plot_cvf.get_stylesheets(dark=True))
 
     # get the filename after checking input for obvious issues
-    filenames = check_input(sys.argv)
+    filenames = check_input(arg_filenames)
 
     # create a set of plots to make, preserve ordering
     dataset = OrderedDict()
@@ -444,10 +461,12 @@ def main():
         dataset[display_name] = data
 
         # while we're here do the airfoil viz
-        do_airfoil_viz(data, 101, 51)
+        if args.blade:
+            do_blade_viz(data, 101, 51)
 
     # and also do comparison plots
-    do_design_comparison_plots(dataset)
+    if args.design:
+        do_design_comparison_plots(dataset)
 
 
 if __name__ == "__main__":
