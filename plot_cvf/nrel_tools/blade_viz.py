@@ -425,22 +425,61 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     fig, ax = create_plot_splined(
         chords_to_plot, xlabel="non-dimensional span", ylabel="chord"
     )
+    # handle figure closeout appropriately
+    if save_fig:
+        filename_plot = "designs_chord.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
+    plt.show()
+
     fig, ax = create_plot_splined(
         twists_to_plot, xlabel="non-dimenstional span", ylabel="twist"
     )
+    # handle figure closeout appropriately
+    if save_fig:
+        filename_plot = "designs_twist.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
+    plt.show()
+
     fig, ax = create_plot_splined(
         refax_x_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $x$"
     )
+    # handle figure closeout appropriately
+    if save_fig:
+        filename_plot = "designs_refax_x.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
+    plt.show()
+
     fig, ax = create_plot_splined(
         refax_y_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $y$"
     )
+    # handle figure closeout appropriately
+    if save_fig:
+        filename_plot = "designs_refax_y.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
+    plt.show()
+
     fig, ax = create_plot_splined(
         refax_z_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $z$"
     )
-
-    # handle closeout appropriately
+    # handle figure closeout appropriately
     if save_fig:
-        filename_plot = "designs.png"
+        filename_plot = "designs_refax_z.png"
         plt.savefig(filename_plot, bbox_inches="tight")
     if show_fig is None:
         plt.show()
