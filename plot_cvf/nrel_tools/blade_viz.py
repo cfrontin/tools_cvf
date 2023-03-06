@@ -287,7 +287,14 @@ def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
     return x_blended, y_blended
 
 
-def do_blade_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
+def do_blade_viz(
+    data: dict,
+    Nsection: int = 101,
+    Ninterp: int = None,
+    display_name=None,
+    save_fig=True,
+    show_fig=True,
+):
     """
     vizualize in 3D a wind turbine blade or set of blades specified using a yaml
     file
@@ -343,10 +350,18 @@ def do_blade_viz(data: dict, Nsection: int = 101, Ninterp: int = None):
     ax.yaxis.set_visible(False)
     ax.zaxis.set_visible(False)
     ax.grid(False)
-    plt.show()
+
+    # handle closeout appropriately
+    if save_fig:
+        filename_plot = "blade_%s.png" % display_name if display_name else "blade.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
 
 
-def do_design_comparison_plots(dataset: list[dict]):
+def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None):
     """
     compare a wind turbine blade or set of blades in terms of the non-dim.
     spanwise variation of their design variables
@@ -422,6 +437,15 @@ def do_design_comparison_plots(dataset: list[dict]):
     fig, ax = create_plot_splined(
         refax_z_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $z$"
     )
+
+    # handle closeout appropriately
+    if save_fig:
+        filename_plot = "designs.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig is None:
+        plt.show()
+    else:
+        plt.close()
     plt.show()
 
 
@@ -434,6 +458,8 @@ def main():
     )
     parser.add_argument("-d", "--design", action="store_true", default=False)
     parser.add_argument("-b", "--blade", action="store_true", default=False)
+    parser.add_argument("-n", "--noshow", action="store_true", default=False)
+    parser.add_argument("-s", "--save", action="store_true", default=False)
 
     args, arg_filenames = parser.parse_known_args()
 
@@ -462,11 +488,20 @@ def main():
 
         # while we're here do the airfoil viz
         if args.blade:
-            do_blade_viz(data, 101, 51)
+            do_blade_viz(
+                data,
+                101,
+                51,
+                display_name=display_name,
+                show_fig=not args.noshow,
+                save_fig=args.save,
+            )
 
     # and also do comparison plots
     if args.design:
-        do_design_comparison_plots(dataset)
+        do_design_comparison_plots(
+            dataset, show_fig=not args.noshow, save_fig=args.save
+        )
 
 
 if __name__ == "__main__":
