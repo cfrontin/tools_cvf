@@ -499,15 +499,14 @@ def main():
     parser.add_argument("-b", "--blade", action="store_true", default=False)
     parser.add_argument("-n", "--noshow", action="store_true", default=False)
     parser.add_argument("-s", "--save", action="store_true", default=False)
-    parser.add_argument("-l", "--latex", action="store_false", default= True)
+    parser.add_argument("-l", "--latex", action="store_false", default=True)
 
     args, arg_filenames = parser.parse_known_args()
 
     ### do functionality
 
     # load the stylesheet for good plots
-    plt.style.use(plot_cvf.get_stylesheets(dark=True,
-                                           use_latex= args.latex))
+    plt.style.use(plot_cvf.get_stylesheets(dark=True, use_latex=args.latex))
 
     # get the filename after checking input for obvious issues
     filenames = check_input(arg_filenames)
