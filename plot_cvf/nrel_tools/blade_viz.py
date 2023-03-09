@@ -6,6 +6,7 @@ import os.path
 import argparse
 import copy
 import ruamel_yaml
+
 # import yaml
 from collections import OrderedDict
 
@@ -53,11 +54,21 @@ def check_input(input: list) -> list[str]:
 
     return filenames
 
-def load_yaml(filename):
 
-    yaml= ruamel_yaml.YAML(typ= 'safe')
-    with open(filename, 'r') as infile:
-        data= yaml.load(infile)
+def load_yaml(filename: str) -> dict:
+    """
+    load a file given by `filename` and return its data
+
+    inputs:
+        - filename: a string filename that has already been checked
+
+    outputs:
+        - data: a dictionary/list structure containing the data from the yaml
+    """
+
+    yaml = ruamel_yaml.YAML(typ="safe")
+    with open(filename, "r") as infile:
+        data = yaml.load(infile)
 
     # # pyyaml version
     # # try to safe read
@@ -65,6 +76,7 @@ def load_yaml(filename):
     # data = yaml.safe_load(infile)
 
     return data
+
 
 def extract_blade_vectors(yaml_data: dict) -> tuple[list]:
     """
@@ -529,8 +541,7 @@ def main():
 
     # loop over filenames
     for filename in filenames:
-
-        data= load_yaml(filename)
+        data = load_yaml(filename)
 
         # get the name based on the file
         display_name = os.path.split(os.path.splitext(filename)[0])[-1]
