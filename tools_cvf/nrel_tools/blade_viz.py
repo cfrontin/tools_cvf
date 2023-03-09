@@ -5,7 +5,6 @@ import os.path
 # IO libraries
 import argparse
 import copy
-import ruamel_yaml
 
 # import yaml
 from collections import OrderedDict
@@ -18,183 +17,7 @@ import seaborn as sns
 import tools_cvf
 import pprint as pp
 
-
-def check_input(input: list) -> list[str]:
-    """
-    check command line input files
-
-    check command line input files to make sure they point to:
-        - at least one real file
-        - only yamls
-
-    inputs:
-        - input: list of CLI input files
-
-    returns:
-        - list of filenames to work on
-    """
-
-    # input checking: either string or list of strings
-    if type(input) == str:
-        input = [
-            input,
-        ]  # coerce to list when string is input
-    assert type(input) == list, "entry must be a list of strings"
-    assert len(input) > 0, "you need to specify at least one file"
-    for x in input:
-        assert type(x) == str, "entry must be a list of strings"
-
-    # make sure inputs are legitimate yaml filenames
-    filenames = []
-    for filename in input:
-        assert os.path.isfile(filename), "this code only works on yaml files"
-        _, extension = os.path.splitext(filename)
-        assert extension in [".yaml", ".yml"], "this code only works on yaml files"
-        filenames.append(filename)
-
-    return filenames
-
-
-def load_yaml(filename: str) -> dict:
-    """
-    load a file given by `filename` and return its data
-
-    inputs:
-        - filename: a string filename that has already been checked
-
-    outputs:
-        - data: a dictionary/list structure containing the data from the yaml
-    """
-
-    yaml = ruamel_yaml.YAML(typ="safe", pure=True)
-    with open(filename, "r") as infile:
-        data = yaml.load(infile)
-
-    # # pyyaml version
-    # # try to safe read
-    # with open(filename, "r") as infile:
-    # data = yaml.safe_load(infile)
-
-    return data
-
-
-def extract_blade_vectors(yaml_data: dict) -> tuple[list]:
-    """
-    given a yaml file, extract the blade design vectors:
-        - airfoil_position_data: interp. map from nondim. span to airfoil types
-        - chord_data: interp. map from nondim. span to chord
-        - twist_data: interp. map from nondim. span to twist
-        - pitch_axis_data: interp. map from nondim. span to pitch axis location
-        - reference_axis_data: interp. map from nondim. span to reference axes
-
-    inputs:
-        - yaml_data: dictionary result from yaml import
-
-    returns:
-        - airfoil_position_data
-        - chord_data
-        - twist_data
-        - pitch_axis_data
-        - reference_axis_data
-    """
-
-    # get the data we will want to perturb
-    airfoil_position_data = yaml_data["components"]["blade"]["outer_shape_bem"][
-        "airfoil_position"
-    ]
-    chord_data = yaml_data["components"]["blade"]["outer_shape_bem"]["chord"]
-    twist_data = yaml_data["components"]["blade"]["outer_shape_bem"]["twist"]
-    pitch_axis_data = yaml_data["components"]["blade"]["outer_shape_bem"]["pitch_axis"]
-    reference_axis_data = yaml_data["components"]["blade"]["outer_shape_bem"][
-        "reference_axis"
-    ]
-
-    return (
-        airfoil_position_data,
-        chord_data,
-        twist_data,
-        pitch_axis_data,
-        reference_axis_data,
-    )
-
-
-def extract_airfoil(yaml_data: dict, airfoil_label: str) -> dict:
-    """
-    extract the airfoil specification from a yaml file
-
-    inputs:
-        - yaml_data: dictionary result from yaml import
-        - airfoil_label: airfoil code, must be in yaml_data['airfoils']
-
-    returns:
-        - airfoil_dict: deepcopy of the airfoil data in the yaml
-    """
-
-    airfoil_dict = {}
-
-    # make sure the airfoil we want is there, get its index
-    assert airfoil_label in [af["name"] for af in yaml_data["airfoils"]]
-    idx_af = [af["name"] for af in yaml_data["airfoils"]].index(airfoil_label)
-
-    # extract the yamldata, deepcopy
-    airfoil_dict[airfoil_label] = copy.deepcopy(yaml_data["airfoils"][idx_af])
-
-    return airfoil_dict
-
-
-def get_splined_section(yaml_data: dict, zq: float) -> tuple:
-    """
-    get the splined version of the design variables at a given non-dim. span
-
-    inputs:
-        - yaml_data: dictionary result from yaml import
-        - zq: nondimensional span at which to evaluate interpolation
-
-    returns:
-        - cq: chord at query point
-        - twq: twist at query points
-        - paq: pitch axis location at query point
-        - _:
-            - xq_refax: reference axis value at query point (in plane/cone of rotation, +: w/ airfoil motion)
-            - yq_refax: reference axis value at query point (out of plane/cone of roration, +: rearward)
-            - zq_refax: reference axis value at query point (span direction, +: outboard)
-    """
-    # get the data
-    (
-        _,
-        chord_data,
-        twist_data,
-        pitch_axis_data,
-        reference_axis_data,
-    ) = extract_blade_vectors(yaml_data)
-
-    # chord first, interpolate at a given query non-dim. span
-    zp_chord = chord_data["grid"]
-    cp_chord = chord_data["values"]
-    cq = interpol.PchipInterpolator(zp_chord, cp_chord)(zq)
-
-    # twist
-    zp_twist = twist_data["grid"]
-    twp_twist = twist_data["values"]
-    twq = interpol.PchipInterpolator(zp_twist, twp_twist)(zq)
-
-    # pitch axis
-    zp_pitchax = pitch_axis_data["grid"]
-    pap_pitchax = pitch_axis_data["values"]
-    paq = interpol.PchipInterpolator(zp_pitchax, pap_pitchax)(zq)
-
-    # reference axes
-    ndsxp_refax = reference_axis_data["x"]["grid"]
-    xp_refax = reference_axis_data["x"]["values"]
-    xq_refax = interpol.PchipInterpolator(ndsxp_refax, xp_refax)(zq)
-    ndsyp_refax = reference_axis_data["y"]["grid"]
-    yp_refax = reference_axis_data["y"]["values"]
-    yq_refax = interpol.PchipInterpolator(ndsyp_refax, yp_refax)(zq)
-    ndszp_refax = reference_axis_data["z"]["grid"]
-    zp_refax = reference_axis_data["z"]["values"]
-    zq_refax = interpol.PchipInterpolator(ndszp_refax, zp_refax)(zq)
-
-    return cq, twq, paq, (xq_refax, yq_refax, zq_refax)
+from tools_cvf.nrel_tools.utils import *
 
 
 def create_plot_splined(
@@ -235,81 +58,6 @@ def create_plot_splined(
     fig.legend()
 
     return fig, ax
-
-
-def loft_foils(yaml_data: dict, zq: float, Ninterp: int = 101):
-    """
-    loft airfoils along the span between exactly specified airfoils
-
-    possibly distinct airfoils are specified at a series of discrete non-dim.
-    span locations, in order to loft the airfoil, use a two step process:
-        1. put airfoils on a common grid (assumed points are arc-equispaced) by
-            PCHIPS interpolation
-        2. interpolate between distinct airfoils by interpolating between
-            matched gridpoints across separate airfoils by PCHIPS interpolation
-
-    inputs:
-        - yaml_data: dictionary result from yaml import
-        - zq: nondimensional span at which to evaluate interpolation
-        - Ninterp: number of points at which to interpolate the airfoil data
-
-    returns:
-        - x_blended: lofted airfoil x data
-        - y_blended: lofted airfoil y data
-    """
-
-    # get the spanwise data
-    (
-        airfoil_section_data,
-        chord_data,
-        twist_data,
-        pitch_axis_data,
-        reference_axis_data,
-    ) = extract_blade_vectors(yaml_data)
-
-    z_list = airfoil_section_data["grid"]
-    foilname_list = airfoil_section_data["labels"]
-
-    # airfoil
-    af_interp_dict = {}
-    for z_p, foilname_p in zip(z_list, foilname_list):
-        af_here = extract_airfoil(yaml_data, foilname_p)[foilname_p]
-
-        # get the airfoil coords
-        x_coord = af_here["coordinates"]["x"]
-        y_coord = af_here["coordinates"]["y"]
-
-        # interpolate the airfoil spec onto a common number of points, assumed to be
-        # equidistant in either angular or arc space
-        basis_ref = np.linspace(0.0, 1.0, Ninterp)
-        basis_coord = np.linspace(0.0, 1.0, len(x_coord))
-        x_interp = np.zeros((Ninterp,))
-        y_interp = np.zeros((Ninterp,))
-        for i in range(Ninterp):
-            x_interp[i] = interpol.PchipInterpolator(basis_coord, x_coord)(basis_ref[i])
-            y_interp[i] = interpol.PchipInterpolator(basis_coord, y_coord)(basis_ref[i])
-
-        af_interp_dict[z_p] = {
-            "x": x_interp,
-            "y": y_interp,
-        }
-
-    # now "interpolate" foil by interpolating x & y vars at a given index along span
-    x_blended = np.zeros((Ninterp,))
-    y_blended = np.zeros((Ninterp,))
-    for i in range(Ninterp):
-        # along a stringer
-        x_stringer = np.array(
-            [af_interp_dict[key]["x"][i] for key in sorted(af_interp_dict.keys())]
-        )
-        y_stringer = np.array(
-            [af_interp_dict[key]["y"][i] for key in sorted(af_interp_dict.keys())]
-        )
-        z_stringer = np.array(sorted(af_interp_dict.keys()))
-        x_blended[i] = interpol.PchipInterpolator(z_stringer, x_stringer)(zq)
-        y_blended[i] = interpol.PchipInterpolator(z_stringer, y_stringer)(zq)
-
-    return x_blended, y_blended
 
 
 def do_blade_viz(
@@ -534,7 +282,7 @@ def main():
     plt.style.use(tools_cvf.get_stylesheets(dark=True, use_latex=args.latex))
 
     # get the filename after checking input for obvious issues
-    filenames = check_input(arg_filenames)
+    filenames = check_yaml_files(arg_filenames)
 
     # create a set of plots to make, preserve ordering
     dataset = OrderedDict()
