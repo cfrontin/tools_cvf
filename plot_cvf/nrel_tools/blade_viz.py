@@ -66,7 +66,7 @@ def load_yaml(filename: str) -> dict:
         - data: a dictionary/list structure containing the data from the yaml
     """
 
-    yaml = ruamel_yaml.YAML(typ="safe")
+    yaml = ruamel_yaml.YAML(typ="safe", pure=True)
     with open(filename, "r") as infile:
         data = yaml.load(infile)
 
