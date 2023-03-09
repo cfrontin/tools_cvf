@@ -15,7 +15,7 @@ import numpy as np
 import scipy.interpolate as interpol
 import matplotlib.pyplot as plt
 import seaborn as sns
-import plot_cvf
+import tools_cvf
 import pprint as pp
 
 
@@ -531,7 +531,7 @@ def main():
     ### do functionality
 
     # load the stylesheet for good plots
-    plt.style.use(plot_cvf.get_stylesheets(dark=True, use_latex=args.latex))
+    plt.style.use(tools_cvf.get_stylesheets(dark=True, use_latex=args.latex))
 
     # get the filename after checking input for obvious issues
     filenames = check_input(arg_filenames)
