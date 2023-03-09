@@ -5,7 +5,8 @@ import os.path
 # IO libraries
 import argparse
 import copy
-import yaml
+import ruamel_yaml
+# import yaml
 from collections import OrderedDict
 
 # plotting
@@ -52,6 +53,18 @@ def check_input(input: list) -> list[str]:
 
     return filenames
 
+def load_yaml(filename):
+
+    yaml= ruamel_yaml.YAML(typ= 'safe')
+    with open(filename, 'r') as infile:
+        data= yaml.load(infile)
+
+    # # pyyaml version
+    # # try to safe read
+    # with open(filename, "r") as infile:
+    # data = yaml.safe_load(infile)
+
+    return data
 
 def extract_blade_vectors(yaml_data: dict) -> tuple[list]:
     """
@@ -516,9 +529,8 @@ def main():
 
     # loop over filenames
     for filename in filenames:
-        # try to safe read
-        with open(filename, "r") as infile:
-            data = yaml.safe_load(infile)
+
+        data= load_yaml(filename)
 
         # get the name based on the file
         display_name = os.path.split(os.path.splitext(filename)[0])[-1]
