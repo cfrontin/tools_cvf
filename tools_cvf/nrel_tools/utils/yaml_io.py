@@ -22,3 +22,17 @@ def load_yaml(filename: str) -> dict:
     # data = yaml.safe_load(infile)
 
     return data
+
+
+def save_yaml(data: dict, filename_out: str) -> dict:
+    """
+    save a yaml data dictionary to a yaml file
+
+    inputs:
+        - data: a yaml data dictionary
+        - filename_out: the yaml file destination to be written
+    """
+
+    yaml = ruamel_yaml.YAML(typ="safe", pure=True)
+    with open(filename_out, "w") as outfile:
+        yaml.dump(data, outfile)
