@@ -4,6 +4,32 @@ import scipy.interpolate as interpol
 from .windio_yaml_extractors import *
 
 
+def get_collapsed_indep_axis(x_list: list) -> np.array:
+    """
+    combine samplings of independent variable
+
+    take a list of independent variables and return a combination of all the
+    unique values, in order; for inclusively collapsing samples of an
+    independent variable s.t. they can be splined at all observed points
+
+    inputs:
+        - x_list: list of independent variable sampling arrays
+
+    returns:
+        - x_out: resulting array of independent variable
+    """
+
+    for idx, x in enumerate(x_list):
+        x_list[idx] = x = np.array(x).flatten()
+        assert len(x.shape) == 1, "indep. variable arrays must be 1D"
+
+    x_out = np.stack(x_list)
+    x_out.sort()
+    x_out = np.unique(x_out)
+
+    return x_out
+
+
 def get_splined_section(yaml_data: dict, zq: float) -> tuple:
     """
     get the splined version of the design variables at a given non-dim. span

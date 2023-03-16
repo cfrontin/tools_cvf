@@ -13,6 +13,7 @@ from collections import OrderedDict
 import numpy as np
 import scipy.interpolate as interpol
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
 import tools_cvf
 import pprint as pp
@@ -21,7 +22,10 @@ from tools_cvf.nrel_tools.utils import *
 
 
 def create_plot_splined(
-    data_dict_list: list[dict], xlabel: str = None, ylabel: str = None
+    data_dict_list: list[dict],
+    xlabel: str = None,
+    ylabel: str = None,
+    figax: tuple[plt.figure, plt.axis] = None,
 ):
     """
     create a plot of a quantity interpreted via a PCHIP spline
@@ -44,7 +48,24 @@ def create_plot_splined(
             data_dict_list,
         ]
     Nplot = 201
-    fig, ax = plt.subplots()
+    if figax is None:
+        fig, ax = plt.subplots()
+    else:
+        assert (
+            len(figax) == 2
+        ), "to use existing figure, submit (fig, ax) tuple as figax"
+        assert (
+            type(figax) == tuple
+        ), "to use existing figure, submit (fig, ax) tuple as figax"
+        assert (
+            type(figax[0]) == mpl.figure.Figure
+        ), "to use existing figure, submit (fig, ax) tuple as figax"
+        assert (
+            type(figax[1]) == plt.Axes
+        ), "to use existing figure, submit (fig, ax) tuple as figax"
+        # plt.figure(figax[0])
+        # plt.sca(figax[1])
+        fig, ax = figax
     for data_dict in data_dict_list:
         xp = data_dict["x"]
         yp = data_dict["y"]
@@ -261,6 +282,126 @@ def do_design_comparison_plots(dataset: list[dict], show_fig=True, save_fig=None
     plt.show()
 
 
+def do_planform_comparison_plots(
+    dataset: list[dict], twist_correct=True, show_fig=True, save_fig=None
+):
+    """
+    compare a wind turbine blade or set of blades in terms of the non-dim.
+    spanwise variation of their design variables
+
+    inputs:
+        - dataset: a dict or list of dicts resulting from a yaml file input
+    """
+
+    # handle if a dictionary rather than list of dicts is passed
+    if type(dataset) == dict:
+        dataset = [
+            dataset,
+        ]
+
+    length_le_to_plot = []
+    length_te_to_plot = []
+    centerline_to_plot = []
+
+    for display_name, data in dataset.items():
+        # get the blade profile data
+        (
+            _,
+            chord_data,
+            twist_data,
+            pitchax_data,
+            reference_axis_data,
+        ) = extract_blade_vectors(data)
+
+        # for now, just make sure that the grids are the same
+        assert np.all(chord_data["grid"] == twist_data["grid"])
+        assert np.all(chord_data["grid"] == pitchax_data["grid"])
+        assert np.all(chord_data["grid"] == reference_axis_data["x"]["grid"])
+        assert np.all(chord_data["grid"] == reference_axis_data["y"]["grid"])
+        assert np.all(chord_data["grid"] == reference_axis_data["z"]["grid"])
+        # TODO: make an independent variable spline mutualizer
+
+        # correct for twist, it's effect on top-down planform
+        twist_correct_term = (
+            np.cos(twist_data["values"])
+            if twist_correct
+            else np.ones(twist_data["grid"])
+        )
+
+        length_le_to_plot.append(
+            {
+                "x": chord_data["grid"],
+                "y": twist_correct_term
+                * np.asarray(chord_data["values"])
+                * np.asarray(pitchax_data["values"]),
+                "label": display_name,
+            }
+        )
+        length_te_to_plot.append(
+            {
+                "x": chord_data["grid"],
+                "y": -twist_correct_term
+                * np.asarray(chord_data["values"])
+                * (1.0 - np.asarray(pitchax_data["values"])),
+                "label": display_name,
+            }
+        )
+        centerline_to_plot.append(
+            {
+                "x": chord_data["grid"],
+                "y": np.asarray(reference_axis_data["y"]["values"]),
+                "label": display_name,
+            }
+        )
+
+    # make the plot
+    Nplot = 201
+    fig, ax = plt.subplots()
+    ax.plot([], [], "w.-", label="centerline")
+    ax.plot([], [], "w--", label="leading edge")
+    ax.plot([], [], "w-", label="trailing edge")
+
+    for data_edges in zip(*(centerline_to_plot, length_le_to_plot, length_te_to_plot)):
+        # centerline
+        xp = data_edges[0]["x"]
+        yp = data_edges[0]["y"]
+        x = np.linspace(np.min(xp), np.max(xp), Nplot)
+        y = interpol.PchipInterpolator(xp, yp)(x)
+        pt0 = ax.plot(x, y, "-.", label=data_edges[0]["label"])
+        ax.plot(xp, yp, ".", c=pt0[-1].get_color(), label="_")
+
+        # leading edge
+        xp = data_edges[1]["x"]
+        yp = data_edges[1]["y"]
+        x = np.linspace(np.min(xp), np.max(xp), Nplot)
+        y = interpol.PchipInterpolator(xp, yp)(x)
+        pt0 = ax.plot(x, y, "--", c=pt0[-1].get_color(), label="_")
+        ax.plot(xp, yp, ".", c=pt0[-1].get_color(), label="_")
+
+        # trailing edge
+        xp = data_edges[2]["x"]
+        yp = data_edges[2]["y"]
+        x = np.linspace(np.min(xp), np.max(xp), Nplot)
+        y = interpol.PchipInterpolator(xp, yp)(x)
+        pt0 = ax.plot(x, y, "-", c=pt0[-1].get_color(), label="_")
+        ax.plot(xp, yp, ".", c=pt0[-1].get_color(), label="_")
+
+    ax.set_xlabel("non-dim. span")
+    ax.set_ylabel("$y$ location")
+    ax.grid(False)
+    fig.legend()
+
+    # handle figure closeout appropriately
+    if save_fig:
+        filename_plot = "planform_lengths.png"
+        plt.savefig(filename_plot, bbox_inches="tight")
+    if show_fig:
+        plt.show()
+    else:
+        plt.close()
+    plt.show()
+
+
 def main():
     ### parse CLI arguments
     parser = argparse.ArgumentParser(
@@ -269,6 +410,7 @@ def main():
         epilog="have a nice day.\a\n",
     )
     parser.add_argument("-d", "--design", action="store_true", default=False)
+    parser.add_argument("-p", "--planform", action="store_true", default=False)
     parser.add_argument("-b", "--blade", action="store_true", default=False)
     parser.add_argument("-n", "--noshow", action="store_true", default=False)
     parser.add_argument("-s", "--save", action="store_true", default=False)
@@ -311,6 +453,12 @@ def main():
     # and also do comparison plots
     if args.design:
         do_design_comparison_plots(
+            dataset, show_fig=not args.noshow, save_fig=args.save
+        )
+
+    # and also do planform plots
+    if args.planform:
+        do_planform_comparison_plots(
             dataset, show_fig=not args.noshow, save_fig=args.save
         )
 
