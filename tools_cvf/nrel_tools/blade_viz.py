@@ -387,7 +387,9 @@ def do_planform_comparison_plots(
         ax.plot(xp, yp, ".", c=pt0[-1].get_color(), label="_")
 
     ax.set_xlabel("non-dim. span")
-    ax.set_ylabel("planform %s" % ("(twist-corrected)" if twist_correct else "(pre-twist)"))
+    ax.set_ylabel(
+        "planform %s" % ("(twist-corrected)" if twist_correct else "(pre-twist)")
+    )
     ax.grid(False)
     fig.legend()
 
