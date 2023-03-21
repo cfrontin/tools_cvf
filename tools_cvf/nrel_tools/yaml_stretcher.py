@@ -50,6 +50,7 @@ def main():
     data_of_interest = [
         data["components"]["blade"]["outer_shape_bem"]["chord"],
         data["components"]["blade"]["outer_shape_bem"]["twist"],
+        data["components"]["blade"]["outer_shape_bem"]["pitch_axis"],
         data["components"]["blade"]["outer_shape_bem"]["reference_axis"]["x"],
         data["components"]["blade"]["outer_shape_bem"]["reference_axis"]["y"],
         data["components"]["blade"]["outer_shape_bem"]["reference_axis"]["z"],
