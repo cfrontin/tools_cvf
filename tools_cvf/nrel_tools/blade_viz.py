@@ -1,6 +1,8 @@
 # system-level libraries
 import sys
+import os
 import os.path
+import glob
 
 # IO libraries
 import argparse
@@ -20,6 +22,8 @@ import pprint as pp
 
 from tools_cvf.nrel_tools.utils import *
 
+blade_viz_image_formats= ("png",)
+blade_viz_image_prefixes= ("blade_", "designs_", "planform_",)
 
 def create_plot_splined(
     data_dict_list: list[dict],
@@ -417,10 +421,21 @@ def main():
     parser.add_argument("-n", "--noshow", action="store_true", default=False)
     parser.add_argument("-s", "--save", action="store_true", default=False)
     parser.add_argument("-l", "--latex", action="store_false", default=True)
+    parser.add_argument("--clean", action= "store_true", default= False)
 
     args, arg_filenames = parser.parse_known_args()
 
     ### do functionality
+
+    if args.clean:
+        
+        for file in glob.glob("*"):
+
+            if not file.endswith(blade_viz_image_formats): continue
+            if not file.startswith(blade_viz_image_prefixes): continue
+            os.remove(file)
+
+        return
 
     # load the stylesheet for good plots
     plt.style.use(tools_cvf.get_stylesheets(dark=True, use_latex=args.latex))
