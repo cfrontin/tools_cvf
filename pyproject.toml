@@ -3,3 +3,33 @@
 requires = ["setuptools", "numpy", "matplotlib", "seaborn"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "tools_cvf"
+version = "0.0.0a1"
+authors = [{name = "Cory Frontin", email = "cory.frontin@nrel.gov"},]
+description = "A package for quick high-quality common plots and tools"
+readme= "README.md"
+requires-python = ">=3.8"
+# url = 
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+# license_files = LICENSE.txt
+# install_requires = 
+#   requests
+
+[tool.setuptools]
+packages = ["tools_cvf",]
+
+# [options]
+# # package_dir == tools_cvf
+# packages = "tools_cvf"
+# python_requires = ">= 3.8"
+# 
+# # [options.packages.find]
+# # where = tools_cvf
+
+[project.scripts]
+blade_viz = "tools_cvf.nrel_tools.blade_viz:main"
+
