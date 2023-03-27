@@ -18,7 +18,11 @@ def main():
     parser.add_argument("src", help="file to re-interpolate")
     parser.add_argument("-d", "--dest", default=None, help="filename to output")
     parser.add_argument(
-        "-n", "--Ninterp", type= int, default=150, help="target number of interpolation points"
+        "-n",
+        "--Ninterp",
+        type=int,
+        default=150,
+        help="target number of interpolation points",
     )
 
     args = parser.parse_args()
@@ -39,7 +43,7 @@ def main():
     ### kernel
 
     # open the BEM optimum file
-    yaml = ryaml.YAML(typ='safe', pure=True)
+    yaml = ryaml.YAML(typ="safe", pure=True)
     with open(filename_in, "r") as infile_yaml:
         # # pyyaml loader
         # data= yaml.safe_load(infile_yaml)

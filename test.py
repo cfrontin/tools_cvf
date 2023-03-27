@@ -39,7 +39,9 @@ if use_tex:
         # with plt.style.context(tools_cvf.get_stylesheets()):
         # with plt.style.context(['/Users/cfrontin/codes/tools_cvf/tools_cvf/stylesheet_seaborn.mplstyle',
         #                         '/Users/cfrontin/codes/tools_cvf/tools_cvf/stylesheet_cvf.mplstyle']):
-        with plt.style.context([url_stylesheet_seaborn, url_stylesheet_cvf, url_stylesheet_nrel]):
+        with plt.style.context(
+            [url_stylesheet_seaborn, url_stylesheet_cvf, url_stylesheet_nrel]
+        ):
             do(fname_save="assets/plot_stylesheet.png")
     if True:
         # with plt.style.context(tools_cvf.get_stylesheets(dark= True)):
