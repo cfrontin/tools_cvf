@@ -35,6 +35,7 @@ def create_plot_splined(
     xlabel: str = None,
     ylabel: str = None,
     figax: tuple[plt.figure, plt.axis] = None,
+    figsize: tuple[float, float] = None,
 ):
     """
     create a plot of a quantity interpreted via a PCHIP spline
@@ -58,7 +59,7 @@ def create_plot_splined(
         ]
     Nplot = 201
     if figax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
     else:
         assert (
             len(figax) == 2
@@ -165,7 +166,10 @@ def do_blade_viz(
 
 
 def do_design_comparison_plots_windio(
-    dataset: list[dict], show_fig=True, save_fig=None
+    dataset: list[dict],
+    show_fig=True,
+    save_fig=None,
+    figsize=None,
 ):
     """
     compare a wind turbine blade or set of blades in terms of the non-dim.
@@ -228,7 +232,10 @@ def do_design_comparison_plots_windio(
 
     # make the plot
     fig, ax = create_plot_splined(
-        chords_to_plot, xlabel="non-dimensional span", ylabel="chord"
+        chords_to_plot,
+        xlabel="non-dimensional span",
+        ylabel="chord",
+        figsize=figsize,
     )
     # handle figure closeout appropriately
     if save_fig:
@@ -241,7 +248,10 @@ def do_design_comparison_plots_windio(
     plt.show()
 
     fig, ax = create_plot_splined(
-        twists_to_plot, xlabel="non-dimenstional span", ylabel="twist"
+        twists_to_plot,
+        xlabel="non-dimenstional span",
+        ylabel="twist",
+        figsize=figsize,
     )
     # handle figure closeout appropriately
     if save_fig:
@@ -254,7 +264,10 @@ def do_design_comparison_plots_windio(
     plt.show()
 
     fig, ax = create_plot_splined(
-        refax_x_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $x$"
+        refax_x_to_plot,
+        xlabel="non-dimenstional span",
+        ylabel="ref. axis $x$",
+        figsize=figsize,
     )
     # handle figure closeout appropriately
     if save_fig:
@@ -267,7 +280,10 @@ def do_design_comparison_plots_windio(
     plt.show()
 
     fig, ax = create_plot_splined(
-        refax_y_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $y$"
+        refax_y_to_plot,
+        xlabel="non-dimenstional span",
+        ylabel="ref. axis $y$",
+        figsize=figsize,
     )
     # handle figure closeout appropriately
     if save_fig:
@@ -280,7 +296,10 @@ def do_design_comparison_plots_windio(
     plt.show()
 
     fig, ax = create_plot_splined(
-        refax_z_to_plot, xlabel="non-dimenstional span", ylabel="ref. axis $z$"
+        refax_z_to_plot,
+        xlabel="non-dimenstional span",
+        ylabel="ref. axis $z$",
+        figsize=figsize,
     )
     # handle figure closeout appropriately
     if save_fig:
@@ -294,7 +313,7 @@ def do_design_comparison_plots_windio(
 
 
 def do_planform_comparison_plots_windio(
-    dataset: list[dict], twist_correct=True, show_fig=True, save_fig=None
+    dataset: list[dict], twist_correct=True, show_fig=True, save_fig=None, figsize=None,
 ):
     """
     compare a wind turbine blade or set of blades in terms of the non-dim.
@@ -367,10 +386,10 @@ def do_planform_comparison_plots_windio(
 
     # make the plot
     Nplot = 201
-    fig, ax = plt.subplots()
-    ax.plot([], [], "w.-", label="centerline")
-    ax.plot([], [], "w--", label="leading edge")
-    ax.plot([], [], "w-", label="trailing edge")
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot([], [], ".-", color="gray", label="centerline")
+    ax.plot([], [], "--", color="gray", label="leading edge")
+    ax.plot([], [], "-", color="gray", label="trailing edge")
 
     for data_edges in zip(*(centerline_to_plot, length_le_to_plot, length_te_to_plot)):
         # centerline
@@ -711,7 +730,7 @@ def do_planform_comparison_plots_aerodyn(
         plt.close()
 
 
-def do_windio_bladeviz(args, arg_filenames):
+def do_windio_bladeviz(args, arg_filenames, figsize=None):
     # get the filename after checking input for obvious issues
     filenames = check_yaml_files(arg_filenames)
 
@@ -742,13 +761,13 @@ def do_windio_bladeviz(args, arg_filenames):
     # and also do comparison plots
     if args.design:
         do_design_comparison_plots_windio(
-            dataset, show_fig=not args.noshow, save_fig=args.save
+            dataset, show_fig=not args.noshow, save_fig=args.save, figsize=figsize
         )
 
     # and also do planform plots
     if args.planform:
         do_planform_comparison_plots_windio(
-            dataset, show_fig=not args.noshow, save_fig=args.save
+            dataset, show_fig=not args.noshow, save_fig=args.save, figsize=figsize
         )
 
 
@@ -790,6 +809,8 @@ def main():
     parser.add_argument("-n", "--noshow", action="store_true", default=False)
     parser.add_argument("-s", "--save", action="store_true", default=False)
     parser.add_argument("-l", "--latex", action="store_false", default=True)
+    parser.add_argument("--small", action="store_true", default=False)
+    parser.add_argument("--paper", action="store_true", default=False)
     parser.add_argument("--aerodyn", action="store_true", default=False)
     parser.add_argument("--clean", action="store_true", default=False)
 
@@ -808,12 +829,15 @@ def main():
         return
 
     # load the stylesheet for good plots
-    plt.style.use(tools_cvf.get_stylesheets(dark=True, use_latex=args.latex))
+    plt.style.use(tools_cvf.get_stylesheets(
+        dark=not args.paper,
+        use_latex=args.latex
+    ))
 
     if args.aerodyn:
         do_aerodyn_bladeviz(args, arg_filenames)
     else:
-        do_windio_bladeviz(args, arg_filenames)
+        do_windio_bladeviz(args, arg_filenames, figsize=(5,4) if args.small else None)
 
 
 if __name__ == "__main__":
